@@ -1,4 +1,5 @@
 import sys
+from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QFileDialog, \
     QComboBox, QLineEdit
 import json
@@ -47,6 +48,20 @@ def save_yaml(data, filename):
 def save_xml(data, filename):
     data.write(filename, encoding='unicode', xml_declaration=True)
     print(f"Dane zostały zapisane do pliku {filename} w formacie XML")
+
+
+class WorkerThread(QThread):
+    finished = pyqtSignal()
+
+    def __init__(self, func, *args, **kwargs):
+        super().__init__()
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
+
+    def run(self):
+        self.func(*self.args, **self.kwargs)
+        self.finished.emit()
 
 
 class Konwerter(QWidget):
@@ -123,8 +138,12 @@ class Konwerter(QWidget):
 
         data = loader(input_file)
         if data:
-            saver(data, output_file)
-            print("Konwersja zakończona pomyślnie.")
+            thread = WorkerThread(saver, data, output_file)
+            thread.finished.connect(self.onThreadFinished)
+            thread.start()
+
+    def onThreadFinished(self):
+        print("Konwersja zakończona pomyślnie.")
 
 
 if __name__ == '__main__':

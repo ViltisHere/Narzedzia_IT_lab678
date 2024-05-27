@@ -5,10 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="cadd9741-ed44-40be-aa70-3490d394297c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/installResources.sh" beforeDir="false" afterPath="$PROJECT_DIR$/installResources.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/konwerter.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/konwerter.py" beforeDir="false" afterPath="$PROJECT_DIR$/konwerter.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,7 +35,7 @@
   "keyToString": {
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "Task8",
+    "git-widget-placeholder": "Task9",
     "last_opened_file_path": "C:/Users/User_1/Desktop/dsw/semestr2/narzedzia branzy it/projekt/Narzedzia_IT_lab678",
     "settings.editor.selected.configurable": "preferences.lookFeel"
   }
