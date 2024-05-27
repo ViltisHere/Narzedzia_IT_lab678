@@ -11,6 +11,7 @@ def load_json(filename):
         content = file.read()
         data = json.loads(content)
         print(f"Zawartość pliku JSON:\n{json.dumps(data, indent=4)}")
+        print("Plik JSON jest poprawny składniowo.")
         return data
 
 
@@ -18,6 +19,7 @@ def load_yaml(filename):
     with open(filename, 'r') as file:
         data = yaml.safe_load(file)
         print(f"Zawartość pliku YAML:\n{yaml.dump(data, default_flow_style=False)}")
+        print("Plik YAML jest poprawny składniowo.")
         return data
 
 
@@ -26,6 +28,7 @@ def load_xml(filename):
     root = tree.getroot()
     data = ET.tostring(root, encoding='unicode')
     print(f"Zawartość pliku XML:\n{data}")
+    print("Plik XML jest poprawny składniowo.")
     return tree
 
 
@@ -41,9 +44,23 @@ def save_yaml(data, filename):
     print(f"Dane zostały zapisane do pliku {filename} w formacie YAML")
 
 
-def save_xml(tree, filename):
-    tree.write(filename, encoding='unicode', xml_declaration=True)
+def save_xml(data, filename):
+    root = ET.Element("data")
+    _dict_to_xml(data, root)
+    tree = ET.ElementTree(root)
+    tree.write(filename, encoding='utf-8', xml_declaration=True)
     print(f"Dane zostały zapisane do pliku {filename} w formacie XML")
+
+
+def _dict_to_xml(data, parent):
+    for key, value in data.items():
+        if isinstance(value, dict):
+            _dict_to_xml(value, ET.SubElement(parent, key))
+        elif isinstance(value, list):
+            for item in value:
+                _dict_to_xml(item, ET.SubElement(parent, key))
+        else:
+            ET.SubElement(parent, key).text = str(value)
 
 
 def main():
