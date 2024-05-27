@@ -6,10 +6,12 @@ import json
 
 def main():
     # Tworzymy parser argumentów
-    parser = argparse.ArgumentParser(description='Prosty program do wyświetlania informacji o pliku JSON.')
+    parser = argparse.ArgumentParser(
+        description='Prosty program do wyświetlania i zapisywania informacji o pliku JSON.')
 
-    # Dodajemy argument, który pozwala na podanie ścieżki do pliku
+    # Dodajemy argumenty, które pozwalają na podanie ścieżki do pliku wejściowego i opcjonalnie do pliku wyjściowego
     parser.add_argument('filename', type=str, help='Ścieżka do pliku do przetworzenia')
+    parser.add_argument('-o', '--output', type=str, help='Ścieżka do pliku wyjściowego')
 
     # Parsujemy argumenty
     args = parser.parse_args()
@@ -44,6 +46,15 @@ def main():
             data = json.loads(content)
             print(f"Zawartość pliku JSON:\n{json.dumps(data, indent=4)}")
             print("Plik JSON jest poprawny składniowo.")
+
+            # Jeśli podano ścieżkę do pliku wyjściowego, zapisujemy dane do tego pliku
+            if args.output:
+                try:
+                    with open(args.output, 'w') as output_file:
+                        json.dump(data, output_file, indent=4)
+                    print(f"Dane zostały zapisane do pliku {args.output}")
+                except Exception as e:
+                    print(f"Nie udało się zapisać danych do pliku {args.output}: {e}")
     except json.JSONDecodeError as e:
         print(f"Nie udało się odczytać pliku {filename}: Błąd składni JSON - {e}")
     except Exception as e:
