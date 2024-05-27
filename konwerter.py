@@ -1,6 +1,6 @@
-import argparse
-import mimetypes
-import os
+import sys
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QFileDialog, \
+    QComboBox, QLineEdit
 import json
 import yaml
 import xml.etree.ElementTree as ET
@@ -45,98 +45,90 @@ def save_yaml(data, filename):
 
 
 def save_xml(data, filename):
-    root = ET.Element("data")
-    _dict_to_xml(data, root)
-    tree = ET.ElementTree(root)
-    tree.write(filename, encoding='utf-8', xml_declaration=True)
+    data.write(filename, encoding='unicode', xml_declaration=True)
     print(f"Dane zostały zapisane do pliku {filename} w formacie XML")
 
 
-def _dict_to_xml(data, parent):
-    for key, value in data.items():
-        if isinstance(value, dict):
-            _dict_to_xml(value, ET.SubElement(parent, key))
-        elif isinstance(value, list):
-            for item in value:
-                _dict_to_xml(item, ET.SubElement(parent, key))
+class Konwerter(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+
+    def initUI(self):
+        self.setWindowTitle('Konwerter')
+        self.setGeometry(100, 100, 400, 200)
+
+        self.file_label = QLabel('Plik wejściowy:')
+        self.file_path = QLineEdit()
+        self.browse_button = QPushButton('Przeglądaj')
+        self.browse_button.clicked.connect(self.browseFile)
+
+        self.format_label = QLabel('Format wyjściowy:')
+        self.format_combo = QComboBox()
+        self.format_combo.addItems(['json', 'yaml', 'xml'])
+
+        self.output_label = QLabel('Plik wyjściowy:')
+        self.output_path = QLineEdit()
+        self.output_button = QPushButton('Przeglądaj')
+        self.output_button.clicked.connect(self.browseOutputFile)
+
+        self.process_button = QPushButton('Konwertuj')
+        self.process_button.clicked.connect(self.processFile)
+
+        vbox = QVBoxLayout()
+        hbox1 = QHBoxLayout()
+        hbox1.addWidget(self.file_label)
+        hbox1.addWidget(self.file_path)
+        hbox1.addWidget(self.browse_button)
+        vbox.addLayout(hbox1)
+        hbox2 = QHBoxLayout()
+        hbox2.addWidget(self.format_label)
+        hbox2.addWidget(self.format_combo)
+        vbox.addLayout(hbox2)
+        hbox3 = QHBoxLayout()
+        hbox3.addWidget(self.output_label)
+        hbox3.addWidget(self.output_path)
+        hbox3.addWidget(self.output_button)
+        vbox.addLayout(hbox3)
+        vbox.addWidget(self.process_button)
+
+        self.setLayout(vbox)
+
+    def browseFile(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, 'Przeglądaj plik')
+        if file_path:
+            self.file_path.setText(file_path)
+
+    def browseOutputFile(self):
+        output_path, _ = QFileDialog.getSaveFileName(self, 'Zapisz plik')
+        if output_path:
+            self.output_path.setText(output_path)
+
+    def processFile(self):
+        input_file = self.file_path.text()
+        output_file = self.output_path.text()
+        output_format = self.format_combo.currentText()
+
+        if output_format == 'json':
+            loader = load_json
+            saver = save_json
+        elif output_format == 'yaml':
+            loader = load_yaml
+            saver = save_yaml
+        elif output_format == 'xml':
+            loader = load_xml
+            saver = save_xml
         else:
-            ET.SubElement(parent, key).text = str(value)
-
-
-def main():
-    # Tworzymy parser argumentów
-    parser = argparse.ArgumentParser(
-        description='Prosty program do wyświetlania i zapisywania informacji o plikach JSON, YAML i XML.')
-
-    # Dodajemy argumenty, które pozwalają na podanie ścieżki do pliku wejściowego, ścieżki do pliku wyjściowego oraz formatu wyjściowego
-    parser.add_argument('filename', type=str, help='Ścieżka do pliku do przetworzenia')
-    parser.add_argument('-o', '--output', type=str, help='Ścieżka do pliku wyjściowego')
-    parser.add_argument('-f', '--format', type=str, choices=['json', 'yaml', 'xml'],
-                        help='Format pliku wyjściowego (json, yaml lub xml)')
-
-    # Parsujemy argumenty
-    args = parser.parse_args()
-
-    # Odczytujemy nazwę pliku
-    filename = args.filename
-
-    # Sprawdzamy, czy plik istnieje
-    if not os.path.isfile(filename):
-        print(f"Plik {filename} nie został znaleziony.")
-        return
-
-    # Wyświetlamy nazwę pliku
-    print(f"Nazwa pliku: {os.path.basename(filename)}")
-
-    # Określamy rodzaj pliku
-    mime_type, _ = mimetypes.guess_type(filename)
-    if mime_type is None:
-        # Jeżeli mime_type nie jest rozpoznane, próbujemy sprawdzić po rozszerzeniu pliku
-        if filename.endswith('.json'):
-            mime_type = 'application/json'
-        elif filename.endswith('.yaml') or filename.endswith('.yml'):
-            mime_type = 'application/x-yaml'
-        elif filename.endswith('.xml'):
-            mime_type = 'application/xml'
-        else:
-            mime_type = 'Nieznany'
-
-    print(f"Rodzaj pliku: {mime_type}")
-
-    # Ładujemy zawartość pliku i weryfikujemy jego poprawność składniową
-    try:
-        if mime_type == 'application/json':
-            data = load_json(filename)
-        elif mime_type == 'application/x-yaml':
-            data = load_yaml(filename)
-        elif mime_type == 'application/xml':
-            data = load_xml(filename)
-        else:
-            print(f"Plik {filename} nie jest obsługiwanym typem pliku (JSON, YAML lub XML).")
             return
 
-        # Jeśli podano ścieżkę do pliku wyjściowego, zapisujemy dane do tego pliku w odpowiednim formacie
-        if args.output:
-            if not args.format:
-                print("Proszę podać format wyjściowy za pomocą opcji -f lub --format (json, yaml lub xml).")
-                return
-
-            try:
-                if args.format == 'json':
-                    save_json(data, args.output)
-                elif args.format == 'yaml':
-                    save_yaml(data, args.output)
-                elif args.format == 'xml' and isinstance(data, ET.ElementTree):
-                    save_xml(data, args.output)
-                else:
-                    print(f"Nieprawidłowy format danych do zapisania w formacie {args.format}")
-            except Exception as e:
-                print(f"Nie udało się zapisać danych do pliku {args.output}: {e}")
-    except (json.JSONDecodeError, yaml.YAMLError, ET.ParseError) as e:
-        print(f"Nie udało się odczytać pliku {filename}: Błąd składni - {e}")
-    except Exception as e:
-        print(f"Nie udało się odczytać pliku {filename}: {e}")
+        data = loader(input_file)
+        if data:
+            saver(data, output_file)
+            print("Konwersja zakończona pomyślnie.")
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    ex = Konwerter()
+    ex.show()
+    sys.exit(app.exec_())
